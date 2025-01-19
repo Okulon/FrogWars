@@ -3,8 +3,10 @@ use dojo_starter::models::{Direction, Position, Field, FieldType, Battle};
 // define the interface
 #[starknet::interface]
 trait IActions<T> {
+    fn joinBattle(ref self: T);
     fn generateBattle(ref self: T);
     fn populateWorld(ref self: T);
+    fn resetBattle(ref self: T);
 
     
     fn spawn(ref self: T);
@@ -31,6 +33,27 @@ pub mod actions {
 
     #[abi(embed_v0)]
     impl ActionsImpl of IActions<ContractState> {
+        fn joinBattle(ref self: ContractState){
+            let mut world = self.world_default();
+            let mut battle: Battle = world.read_model(1000000);
+            let player = get_caller_address();
+
+            if (battle.initialized){
+                if (battle.playerCount == 1){
+                    battle.playerAddress2 = player;
+                    battle.playerCount = 2
+
+                    // two players joined, initialize spawnlocations
+                }
+            } else {
+                self.generateBattle();
+                self.populateWorld();
+                battle.playerAddress1 = player;
+                battle.playerCount = 1
+            }
+           
+            
+        }
         fn generateBattle(ref self: ContractState){
             let mut world = self.world_default();
 
@@ -39,9 +62,11 @@ pub mod actions {
                  playerAddress1: starknet::contract_address_const::<0x0>(),
                  playerAddress2: starknet::contract_address_const::<0x0>(),
                  initialized: false,
+                 playerCount: 0,
             };
 
             world.write_model(@newBattle);
+            
         }
 
         fn populateWorld(ref self: ContractState) {
@@ -50,14 +75,26 @@ pub mod actions {
 
             // generate map with 100 fields
             let battleId = 1000000;
-
+            
             let mut index = 0;
+            
+            let initialBattleSettings: Array<u32> = array![
+                0, 0, 0, 0, 0, 1, 0, 0, 0, 0,
+                0, 2, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 1, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 1, 1, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+                1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 1, 1, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 1, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 2, 0,
+                0, 0, 0, 0, 1, 0, 0, 0, 0, 0];
 
             while index < 100 {
-                let mut newField: Field = Field{fieldId: index, battleId: battleId, fieldType: FieldType::Empty}; 
+                let mut newField: Field = Field{fieldId: index, battleId: battleId, fieldType: *initialBattleSettings.at(index), occupiedBy: starknet::contract_address_const::<0x0>() }; 
                 world.write_model(@newField);
                 index += 1;
-             };
+             }; 
 
             let mut battle: Battle = world.read_model(1000000);
             battle.initialized = true;
@@ -66,7 +103,19 @@ pub mod actions {
         }
 
 
+        fn resetBattle(ref self: ContractState){
+            let mut world = self.world_default();
 
+            let mut index = 0;
+            let arr: Array<u32> = array![0];
+            while index < 100 {
+                let mut _fix = arr.at(index*0);
+                let mut field: Field = world.read_model( (index, 1000000) );
+                world.erase_model(@field);
+                index += 1;
+            };
+
+        }
 
         fn spawn(ref self: ContractState) {
             // Get the default world.

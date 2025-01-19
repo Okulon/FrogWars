@@ -1252,8 +1252,8 @@
   },
   "contracts": [
     {
-      "address": "0x26d5de2840e1a06627b10bd5e038180b7baea860a4882e60294315f443a4f95",
-      "class_hash": "0x339c26ab19d105dea17dce2d43465872bc99007d1fc1ab580f2ec836ebb3c11",
+      "address": "0x4d046c60e57d04ea3c06f65b59c4b9276e7c26c396187002bd055b34faeb81",
+      "class_hash": "0x14504ce1c588184562d65818a672e1e3413767581643cc8e5f16272c253667a",
       "abi": [
         {
           "type": "impl",
@@ -1346,6 +1346,13 @@
             {
               "type": "function",
               "name": "populateWorld",
+              "inputs": [],
+              "outputs": [],
+              "state_mutability": "external"
+            },
+            {
+              "type": "function",
+              "name": "resetBattle",
               "inputs": [],
               "outputs": [],
               "state_mutability": "external"
@@ -1492,6 +1499,7 @@
       "systems": [
         "generateBattle",
         "populateWorld",
+        "resetBattle",
         "spawn",
         "move",
         "upgrade"
@@ -1513,7 +1521,7 @@
     },
     {
       "members": [],
-      "class_hash": "0x55dcf071bf32d8b605bdf8724f0e40b6721cca4ff8e9e5880ea6eefc43dfa64",
+      "class_hash": "0x720daeae8792168821b5d001758bcddff96b63aada00131ead0dd12a9f4e8ba",
       "tag": "dojo_starter-Field",
       "selector": "0x372469be4fc28ab02715d044aa7274cb17b9a92c922681c8ca811407fe86f1b"
     },

@@ -10,6 +10,9 @@ sierra-replace-ids = true
 migrate = "sozo build && sozo migrate"                      # scarb run migrate
 spawn = "sozo execute dojo_starter-actions spawn --wait"    # scarb run spawn
 move = "sozo execute dojo_starter-actions move -c 1 --wait" # scarb run move
+generateBattle = "sozo execute dojo_starter-actions generateBattle --wait"    # scarb run generateBattle
+resetBattle = "sozo execute dojo_starter-actions resetBattle --wait"    # scarb run resetBattle
+populateWorld = "sozo execute dojo_starter-actions spawn --wait"    # scarb run populateWorld
 
 [dependencies]
 dojo = { git = "https://github.com/dojoengine/dojo", tag = "v1.0.11" }

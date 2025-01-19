@@ -17,8 +17,13 @@ pub struct Field {
     pub fieldId: u32,
     #[key]
     pub battleId: u32,
-    pub fieldType: FieldType,
+    pub fieldType: u32,
+    pub occupiedBy: ContractAddress,
 }
+
+    // 0 = empty_grass
+    // 1 = unpassable_terrain
+    // 2 = ore_deposit
 
  #[derive(Copy, Drop, Serde, Debug, Introspect)]
  #[dojo::model]
@@ -28,6 +33,7 @@ pub struct Field {
      pub playerAddress1: ContractAddress,
      pub playerAddress2: ContractAddress,
      pub initialized: bool,
+     pub playerCount: u32,
  }
  
 // Game Fields

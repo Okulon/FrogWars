@@ -10,6 +10,16 @@ import { WalletAccount } from "./wallet-account.tsx";
 import { HistoricalEvents } from "./historical-events.tsx";
 import { useDojoSDK, useModel } from "@dojoengine/sdk/react";
 
+
+
+
+//images
+import empty_tile from './assets/empty.png';
+import empty_field_1 from './assets/placeholder_standard.png';
+import empty_field_2 from './assets/placeholder_standard_2.png';
+import empty_field_3 from './assets/placeholder_standard_3.png';
+
+import unpassable_terrain_1 from './assets/unpassable_terrain_1.png';
 /**
  * Main application component that provides game functionality and UI.
  * Handles entity subscriptions, state management, and user interactions.
@@ -53,7 +63,7 @@ function App() {
                             // )
                             .entity("Field", (e) =>
                                 e.is(
-                                    "mapId",
+                                    "battleId",
                                     1000000
                                 )
                             )
@@ -100,7 +110,7 @@ function App() {
                         .namespace("dojo_starter", (n) =>
                             n.entity("Field", (e) => //Moves
                                 e.eq(
-                                    "mapId",//"player",
+                                    "battleId",//"player",
                                     1000000//addAddressPadding(account.address)
                                 )
                                 
@@ -141,7 +151,7 @@ function App() {
             <div className="max-w-7xl mx-auto">
                 <WalletAccount />
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+                {/* { <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
                     <div className="bg-gray-700 p-4 rounded-lg shadow-inner">
                         <div className="grid grid-cols-3 gap-2 w-full h-48">
                             <div className="col-start-2">
@@ -216,38 +226,141 @@ function App() {
                             ))}
                         </div>
                     </div>
+                </div> } */}
+                <div
+                    style={{
+                        display: "flex",
+                        justifyContent: "left", // Center the row
+                        gap: "10px", // Space between buttons
+                        padding: "10px", // Optional padding
+                    }}
+                >
+                    {["Start Battle", "Reset Battle", "Complete Turn"].map((name, index) => (
+                        <button
+                            key={index}
+                            style={{
+                                padding: "10px 20px",
+                                backgroundColor: "#006400", // Dark green background
+                                color: "white", // White text
+                                border: "none",
+                                borderRadius: "5px",
+                                cursor: "pointer",
+                                transition: "background-color 0.3s ease", // Smooth transition effect
+                            }}
+                            onMouseDown={(e) => {
+                                e.currentTarget.style.backgroundColor = "#32CD32"; // Light green on click
+                            }}
+                            onMouseUp={(e) => {
+                                e.currentTarget.style.backgroundColor = "#006400"; // Reset to dark green
+                            }}
+                            onMouseLeave={(e) => {
+                                e.currentTarget.style.backgroundColor = "#006400"; // Reset if the mouse leaves the button
+                            }}
+                            onClick={() => {
+                                console.log(`${name} clicked`); // Log the button click
+                                if (name == "Start Battle"){
+                                    const startBattle = async () => {
+                                        console.log("client.actions:", client.actions);
+                                        await client.actions.generateBattle(account!);
+                            
+                                 
+                                    };
+                            
+                                    startBattle(); // Explicitly invoke the function
+
+                                }
+                                if (name == "Reset Battle"){
+                                    const startBattle2 = async () => {
+                                        console.log("client.actions:", client.actions);
+                                    
+                            
+                                        await client.actions.populateWorld(account!);
+                                    };
+                            
+                                    startBattle2(); // Explicitly invoke the function
+                                }
+                                if (name == "Complete Turn"){
+                                    const startBattle3 = async () => {
+                                        console.log("client.actions:", client.actions);
+                                    
+                            
+                                        await client.actions.resetBattle(account!);
+                                    };
+                            
+                                    startBattle3(); // Explicitly invoke the function
+                                }
+                            }}
+                        >
+                            {name}
+                        </button>
+                    ))}
                 </div>
                 <div
                     style={{
                         display: "grid",
-                        gridTemplateColumns: `repeat(${Math.sqrt(Object.entries(entities).length)}, 100px)`,
-                        gridTemplateRows: `repeat(${Math.sqrt(Object.entries(entities).length)}, 100px)`,
-                        gap: "0", // Ensure no additional gaps are added
+                        gridTemplateColumns: `repeat(10, 100px)`, // 10 columns of 100px width
+                        gridTemplateRows: `repeat(10, 100px)`,   // 10 rows of 100px height
+                        gap: "0", // No additional gaps, only borders
                     }}
                 >
                     {Object.entries(entities).map(([entityId, entity]) => {
-                        const totalEntries = Object.entries(entities).length;
+                        const transparentImage = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/w8AAgMBAf8lmt8AAAAASUVORK5CYII=";
                         const fieldId = entity.models.dojo_starter.Field?.fieldId;
+                        const fieldType = entity.models.dojo_starter.Field?.fieldType;
 
-                        // Calculate x and y
-                        const x = fieldId % Math.sqrt(totalEntries); // Use square root for correct grid alignment
-                        const y = Math.floor(fieldId / Math.sqrt(totalEntries));
+                        // Placeholder for multiple image URLs
+                        var images = [
+                            Math.random() < 0.33 ? empty_field_1 : Math.random() < 0.5 ? empty_field_2 : empty_field_3, // Base layer
+                            transparentImage, // Layer on top
+                            transparentImage, // Optional additional layer
+                        ];
+
+                        if (fieldType == 1) {
+                            images = [
+                                unpassable_terrain_1, // Base layer
+                                transparentImage, // Layer on top
+                                transparentImage, // Optional additional layer
+                            ];
+                        }
+
+                        // Calculate x and y for grid placement
+                        const x = fieldId % 10; // Column (0-9)
+                        const y = Math.floor(fieldId / 10); // Row (0-9)
 
                         return (
                             <div
                                 key={entityId}
                                 style={{
+                                    gridColumn: x + 1, // Grid columns start at 1
+                                    gridRow: y + 1,    // Grid rows start at 1
+                                    position: "relative", // Allows stacking inside this square
                                     width: "100px",
                                     height: "100px",
-                                    backgroundColor: "#006400",
-                                    border: "1px solid black", // Border defines the gap
-                                    boxSizing: "border-box", // Ensures border is included in the element's size
+                                    border: "1px solid black", // Optional border for separation
+                                    boxSizing: "border-box", // Include borders in size calculation
                                 }}
                                 title={`x: ${x}, y: ${y}`} // Tooltip for debugging
-                            ></div>
+                            >
+                                {images.map((image, index) => (
+                                    <img
+                                        key={index}
+                                        src={image}
+                                        alt={`x: ${x}, y: ${y}`}
+                                        style={{
+                                            position: "absolute", // Stack on top of each other
+                                            top: 0,
+                                            left: 0,
+                                            width: "100%", // Match the square size
+                                            height: "100%", // Match the square size
+                                            objectFit: "cover", // Ensures images fit the square
+                                            zIndex: index, // Controls stacking order
+                                        }}
+                                    />
+                                ))}
+                            </div>
                         );
                     })}
-                </div>              
+                </div>             
                 
                 {/* // Here sdk is passed as props but this can be done via contexts */}
                 <HistoricalEvents />

@@ -30,9 +30,28 @@ use dojo::model::{ModelStorage, ModelValueStorage, ModelStorageTest};
         ].span()
     }
 
+    #[test]
+    #[available_gas(300000000)]
+    fn test_resetBattle() {
+        
+        let _caller = starknet::contract_address_const::<0x0>();
+
+        let ndef = namespace_def();
+        let mut world = spawn_test_world([ndef].span());
+        world.sync_perms_and_inits(contract_defs());
+
+        let (contract_address, _) = world.dns(@"actions").unwrap();
+        let actions_system = IActionsDispatcher { contract_address };
+
+        actions_system.generateBattle();
+        //let mut battle: Battle = world.read_model(1000000);
+        actions_system.populateWorld();
+        actions_system.resetBattle();
+
+    }
 
     #[test]
-    #[available_gas(30000000)]
+    #[available_gas(300000000)]
     fn test_generateBattle() {
         
         let _caller = starknet::contract_address_const::<0x0>();
