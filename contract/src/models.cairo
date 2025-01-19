@@ -21,9 +21,12 @@ pub struct Field {
     // 0 = empty_grass
     // 1 = unpassable_terrain
     // 2 = ore_deposit
+
     pub structureType: u32,
     // 0 = none
     // 1 = Mainbase
+    pub structureHp: u32,
+
     pub unitType: u32,
     pub occupiedBy: ContractAddress,
 }

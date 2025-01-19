@@ -47,4 +47,8 @@ export default tseslint.config({
         ...react.configs["jsx-runtime"].rules,
     },
 });
+
+
+// katana --dev --dev.no-fee --http.cors_origins "*"
+// torii --http.cors_origins "*" --world 0x0525177c8afe8680d7ad1da30ca183e482cfcd6404c1e09d83fd3fa2994fd4b8
 ```

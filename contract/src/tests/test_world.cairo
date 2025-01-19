@@ -35,7 +35,7 @@ use dojo::model::{ModelStorage, ModelValueStorage, ModelStorageTest};
     #[available_gas(3000000000)]
     fn testJoinAndCreate() {
         
-        let caller = starknet::contract_address_const::<0x02>();
+        let _caller = starknet::contract_address_const::<0x02>();
         let ndef = namespace_def();  
         let mut world = spawn_test_world([ndef].span());
         world.sync_perms_and_inits(contract_defs());
@@ -54,6 +54,8 @@ use dojo::model::{ModelStorage, ModelValueStorage, ModelStorageTest};
         actions_system.joinBattle();
         //assert(battle2.playerCount == 2, 'not 2 player joined ');
         // TODO: Fix commented asserts
+        // let mut strucField: Field = world.read_model((0, 1000000));
+        // assert(strucField.structureType == 1, 'structures not initialized');
 
 
     }

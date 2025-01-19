@@ -40,14 +40,14 @@ pub mod actions {
             let battleId = 1000000;
 
             if (battle.initialized){
-                if (battle.playerCount == 1 && battle.playerAddress1 != player){
+                if (battle.playerCount == 1 ){//&& battle.playerAddress1 != player){
                     battle.playerAddress2 = player;
                     battle.playerCount = 2;
                     world.write_model(@battle);
-                    // two players joined, initialize spawnlocations
+                    // two players joined, initialize spawnlocations, give hp to bases
                     let spawnLocations: Array<u32> = array![
                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                        0, 0, 0, 0, 0, 0, 0, 0, 1, 0,
+                        0, 0, 0, 0, 0, 0, 0, 0, 2, 0,
                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -60,25 +60,35 @@ pub mod actions {
                     let mut index = 0;
                     while index < 100 {
                         //let spawn: u32 = spawnLocations[index];
-                        let spawn: u32 = *spawnLocations[0];
-                        if (spawn == 1){
-                            let field: Field = world.read_model((index, battleId));
+                        let spawn: u32 = *spawnLocations[index];
+                        if (spawn == 1 || spawn == 2){
+                            let mut field: Field = world.read_model((index, battleId));
+                            field.structureType = 1;
+                            field.structureHp = 10;
+                            if (spawn == 1){
+                                field.occupiedBy = battle.playerAddress1;
+                            }
+                            if (spawn == 2){
+                                field.occupiedBy = battle.playerAddress2;
+                            }
 
-                            let mut newField: Field = Field{
-                                fieldId: index, 
-                                battleId: field.battleId, 
-                                fieldType: field.fieldType,
-                                unitType: field.unitType, 
-                                structureType: 1,
-                                occupiedBy: player }; 
-                            world.write_model(@newField);
+
+                            // let mut _newField: Field = Field{
+                            //     fieldId: index, 
+                            //     battleId: field.battleId, 
+                            //     fieldType: field.fieldType,
+                            //     unitType: field.unitType, 
+                            //     structureType: 1,
+                            //     structureHp: 10,
+                            //     occupiedBy: player }; 
+                            world.write_model(@field);
                         }                                  
                         
                         index += 1;
                     };
 
                 }
-            } else {
+            } else if (battle.playerCount == 0) {
                 self.generateBattle();
                 self.populateWorld();
                 let mut battle: Battle = world.read_model(1000000);
@@ -132,6 +142,7 @@ pub mod actions {
                     fieldType: *initialBattleSettings.at(index),
                     unitType: 0, 
                     structureType: 0,
+                    structureHp: 0,
                     occupiedBy: starknet::contract_address_const::<0x0>() }; 
                 world.write_model(@newField);
                 index += 1;
@@ -155,7 +166,8 @@ pub mod actions {
                 world.erase_model(@field);
                 index += 1;
             };
-
+            let mut battle: Battle = world.read_model(1000000);
+            world.erase_model(@battle)
         }
 
         fn spawn(ref self: ContractState) {

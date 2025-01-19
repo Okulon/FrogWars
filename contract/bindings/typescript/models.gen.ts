@@ -10,6 +10,7 @@ export interface Battle {
 	playerAddress1: string;
 	playerAddress2: string;
 	initialized: boolean;
+	playerCount: BigNumberish;
 }
 
 // Type definition for `dojo_starter::models::BattleValue` struct
@@ -17,6 +18,7 @@ export interface BattleValue {
 	playerAddress1: string;
 	playerAddress2: string;
 	initialized: boolean;
+	playerCount: BigNumberish;
 }
 
 // Type definition for `dojo_starter::models::DirectionsAvailable` struct
@@ -35,11 +37,19 @@ export interface Field {
 	fieldId: BigNumberish;
 	battleId: BigNumberish;
 	fieldType: BigNumberish;
+	structureType: BigNumberish;
+	structureHp: BigNumberish;
+	unitType: BigNumberish;
+	occupiedBy: string;
 }
 
 // Type definition for `dojo_starter::models::FieldValue` struct
 export interface FieldValue {
 	fieldType: BigNumberish;
+	structureType: BigNumberish;
+	structureHp: BigNumberish;
+	unitType: BigNumberish;
+	occupiedBy: string;
 }
 
 // Type definition for `dojo_starter::models::Moves` struct
@@ -114,17 +124,19 @@ export interface SchemaType extends ISchemaType {
 export const schema: SchemaType = {
 	dojo_starter: {
 		Battle: {
-			fieldOrder: ['battleId', 'playerAddress1', 'playerAddress2', 'initialized'],
+			fieldOrder: ['battleId', 'playerAddress1', 'playerAddress2', 'initialized', 'playerCount'],
 			battleId: 0,
 			playerAddress1: "",
 			playerAddress2: "",
 			initialized: false,
+			playerCount: 0,
 		},
 		BattleValue: {
-			fieldOrder: ['playerAddress1', 'playerAddress2', 'initialized'],
+			fieldOrder: ['playerAddress1', 'playerAddress2', 'initialized', 'playerCount'],
 			playerAddress1: "",
 			playerAddress2: "",
 			initialized: false,
+			playerCount: 0,
 		},
 		DirectionsAvailable: {
 			fieldOrder: ['player', 'directions'],
@@ -144,14 +156,22 @@ export const schema: SchemaType = {
 				Down: undefined, })],
 		},
 		Field: {
-			fieldOrder: ['fieldId', 'battleId', 'fieldType'],
+			fieldOrder: ['fieldId', 'battleId', 'fieldType', 'structureType', 'structureHp', 'unitType', 'occupiedBy'],
 			fieldId: 0,
 			battleId: 0,
 			fieldType: 0,
+			structureType: 0,
+			structureHp: 0,
+			unitType: 0,
+			occupiedBy: "",
 		},
 		FieldValue: {
-			fieldOrder: ['fieldType'],
+			fieldOrder: ['fieldType', 'structureType', 'structureHp', 'unitType', 'occupiedBy'],
 			fieldType: 0,
+			structureType: 0,
+			structureHp: 0,
+			unitType: 0,
+			occupiedBy: "",
 		},
 		Moves: {
 			fieldOrder: ['player', 'remaining', 'last_direction', 'can_move'],

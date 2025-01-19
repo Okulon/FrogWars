@@ -25,6 +25,27 @@ export function setupWorld(provider: DojoProvider) {
 		}
 	};
 
+	const build_actions_joinBattle_calldata = (): DojoCall => {
+		return {
+			contractName: "actions",
+			entrypoint: "joinBattle",
+			calldata: [],
+		};
+	};
+
+	const actions_joinBattle = async (snAccount: Account | AccountInterface) => {
+		try {
+			return await provider.execute(
+				snAccount,
+				build_actions_joinBattle_calldata(),
+				"dojo_starter",
+			);
+		} catch (error) {
+			console.error(error);
+			throw error;
+		}
+	};
+
 	const build_actions_move_calldata = (direction: CairoCustomEnum): DojoCall => {
 		return {
 			contractName: "actions",
@@ -115,6 +136,8 @@ export function setupWorld(provider: DojoProvider) {
 		actions: {
 			generateBattle: actions_generateBattle,
 			buildGenerateBattleCalldata: build_actions_generateBattle_calldata,
+			joinBattle: actions_joinBattle,
+			buildJoinBattleCalldata: build_actions_joinBattle_calldata,
 			move: actions_move,
 			buildMoveCalldata: build_actions_move_calldata,
 			populateWorld: actions_populateWorld,
