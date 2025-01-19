@@ -18,12 +18,17 @@ pub struct Field {
     #[key]
     pub battleId: u32,
     pub fieldType: u32,
-    pub occupiedBy: ContractAddress,
-}
-
     // 0 = empty_grass
     // 1 = unpassable_terrain
     // 2 = ore_deposit
+    pub structureType: u32,
+    // 0 = none
+    // 1 = Mainbase
+    pub unitType: u32,
+    pub occupiedBy: ContractAddress,
+}
+
+
 
  #[derive(Copy, Drop, Serde, Debug, Introspect)]
  #[dojo::model]
