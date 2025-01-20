@@ -18,6 +18,8 @@ import empty_field_3 from './assets/placeholder_standard_3.png';
 import unpassable_terrain_1 from './assets/unpassable_terrain_1.png';
 import spawning_pool_p1 from './assets/spawning_pool_p1.png';
 import spawning_pool_p2 from './assets/spawning_pool_p2.png';
+import frog_p1 from './assets/frog_p1.png';
+import frog_p2 from './assets/frog_p2.png';
 
 function App() {
     const { useDojoStore, client, sdk } = useDojoSDK();
@@ -26,7 +28,10 @@ function App() {
     const entities = useDojoStore((state) => state.entities);
 
     //GAMESTATE
-    const [myTurn, setMyturn] = useState(true);
+    const [myTurn, setMyturn] = useState(false);
+    const [myGold, setMyGold] = useState(0);
+    const [p1a, setP1a] = useState("");
+    const [p2a, setP2a] = useState("");
 
     // SELECTION
     const [selectedFieldx, setSelectedFieldx] = useState(-1);
@@ -38,6 +43,16 @@ function App() {
     const [selectedUnitType, setSelectedUnitType] = useState(-1);
     const [selectedUnitdHp, setSelectedUnitHp] = useState(0);
     const [selectedFieldCanMove, setSelectedFieldCanMove] = useState(false);
+    const [selectedMovesLeft, setSelectedMovesLeft] = useState(0);
+
+    
+
+    //ABILITIES / SHOPS
+    const [abilityShopId, setAbilityShopId] = useState(0);
+
+    //ACTIONS
+    const [fieldIdToMove, setFieldIdToMove] = useState(0);
+
 
 
 
@@ -131,6 +146,67 @@ function App() {
             } catch (error) {
                 console.error("Error querying entities:", error);
             }
+            try {
+                await sdk.getEntities({
+                    query: new QueryBuilder<SchemaType>()
+                        .namespace("dojo_starter", (n) =>
+                            n.entity("Battle", (e) =>
+                                e.eq("battleId", 1000000)
+                            )
+                        )
+                        .build(),
+                    callback: (resp) => {
+                        if (resp.error) {
+                            console.error("resp.error.message:", resp.error.message);
+                            return;
+                        }
+                        if (resp.data) {
+                            // state.setEntities(
+                            //     resp.data as ParsedEntity<SchemaType>[]
+                            // );
+                            console.log("BATTLEFIELD UPDATE:", state.entities);
+                            Object.entries(resp.data as ParsedEntity<SchemaType>[]).map(([entityId, entity]) => {
+                                const battleStarted = entity.models.dojo_starter.Battle?.initialized;
+                                if (battleStarted){
+                                    console.log("battle has started");
+                                    console.log("turnorder ",entity.models.dojo_starter.Battle?.turnOrder);
+                                    setP1a(entity.models.dojo_starter.Battle?.playerAddress1!);
+                                    setP2a(entity.models.dojo_starter.Battle?.playerAddress2!);
+                                    const imP1 = entity.models.dojo_starter.Battle?.playerAddress1 == addAddressPadding(account!.address);
+                                    console.log('imp1: ',imP1);
+                                    if (entity.models.dojo_starter.Battle?.turnOrder == 0){
+                                        if (imP1){
+                                            console.log("my turn");
+                                            setMyturn(true);
+                                        } else {
+                                            console.log("enemy turn");
+                                            setMyturn(false);
+                                        }
+                                    }
+                                    if (entity.models.dojo_starter.Battle?.turnOrder == 1){
+                                        if (imP1){
+                                            setMyturn(false);
+                                        }  else {
+                                            setMyturn(true);
+                                        }
+                                    }
+                                    
+
+                                    if (imP1){
+                                         setMyGold(entity.models.dojo_starter.Battle?.p1Gold);
+                                    }
+                                    else {
+                                         setMyGold(entity.models.dojo_starter.Battle?.p2Gold);
+                                    }
+                                    
+                                }
+                            });
+                        }
+                    },
+                });
+            } catch (error) {
+                console.error("Error querying entities:", error);
+            }
         };
 
         if (account) {
@@ -140,6 +216,7 @@ function App() {
 
     const moves = useModel(entityId as string, ModelsMapping.Moves);
     const position = useModel(entityId as string, ModelsMapping.Position);
+    const abilityShopArray = abilityShopId == 1 ? ["Frog (100g)", "Toad (250g)"] : [] ;
 
     return (
         <div className="bg-black min-h-screen w-full p-4 sm:p-8">
@@ -155,7 +232,7 @@ function App() {
                         padding: "10px",
                     }}
                 >
-                    {["Join Battle", "Reset Battle", "Complete Turn"].map((name, index) => (
+                    {["Join Battle", "Reset Battle", myTurn ? "Complete Turn" : "Waiting for Enemy Turn"].map((name, index) => (
                         <button
                             key={index}
                             style={{
@@ -193,7 +270,12 @@ function App() {
                                     resetBattle();
                                 }
                                 if (name === "Complete Turn") {
-                                    console.log("Complete Turn clicked");
+                                    const nextTurn = async () => {
+                                        console.log("client.actions:", client.actions);
+                                        setMyturn(!myTurn);
+                                        await client.actions.nextTurn(account!);
+                                    };
+                                    nextTurn();
                                 }
                             }}
                         >
@@ -231,6 +313,7 @@ function App() {
                             const structureHp = entity.models.dojo_starter.Field?.structureHp;
 
                             const unitType = entity.models.dojo_starter.Field?.unitType;
+                            const movesLeft = entity.models.dojo_starter.Field?.movesLeft;
 
                             const ownedBy = entity.models.dojo_starter.Field?.occupiedBy;
 
@@ -238,6 +321,8 @@ function App() {
                             const rand1 = Math.random() < 0.33;
                             const rand2 = Math.random() < 0.5;
                             var ttype = 0;
+
+
                             if (structureType == 1 && !bothPlayersJoined){
                                 setBothPlayersJoined(true);
                                 setInfoTextTitle("Ready To Start");
@@ -247,12 +332,19 @@ function App() {
                             if (grass_state[fieldId] < 0) {
                                 updateGrassState(fieldId, ttype);
                             }
+                            var unitImage = transparentImage;
+                            if (unitType == 1){
+                                if (ownedBy == myAddress)
+                                    unitImage = frog_p1;
+                                else
+                                    unitImage = frog_p2;
+                            }
                             var images = [
                                 grass_state[fieldId] === 0 ? empty_field_1 : grass_state[fieldId] === 1 ? empty_field_2 : empty_field_3,
                                 structureType === 0 ? transparentImage : ((ownedBy === myAddress) ?
                                     (structureType === 1 ? spawning_pool_p1 : spawning_pool_p1) :
                                     (structureType === 1 ? spawning_pool_p2 : spawning_pool_p2)),
-                                transparentImage,
+                                    unitImage,
                             ];
 
                             if (fieldType === 1) {
@@ -271,7 +363,7 @@ function App() {
                                 if (structureType == 0 && unitType  == 0){
                                     if (fieldType == 0){
                                         if (selectedFieldCanMove)
-                                            highlightForMovement = true;
+                                                highlightForMovement = true;
                                     }
                                 }
                             }
@@ -279,7 +371,7 @@ function App() {
                                 if (structureType == 0 && unitType  == 0){
                                     if (fieldType == 0){
                                         if (selectedFieldCanMove)
-                                            highlightForMovement = true;
+                                                highlightForMovement = true;
                                     }
                                 }
                             }
@@ -304,7 +396,38 @@ function App() {
                                         setSelectedFieldType(structureType);
                                         setSelectedFieldHp(0);
                                         setSelectedFieldOwner(true);
+                                        setSelectedFieldCanMove(false);
+                                        setSelectedMovesLeft(movesLeft);
+                                        setAbilityShopId(0);
                                         setInfoTextTitle("Terrain");
+
+
+
+
+                                        //Movementcheck
+                                        if (fieldIdToMove >= 0){
+                                            if (fieldId >= 0){
+                                                if (structureHp <= 0){
+                                                    if (    
+                                                        ((x-1 == selectedFieldx || x+1 == selectedFieldx) && (y == selectedFieldy) )
+                                                        ||
+                                                        ((x == selectedFieldx ) && (y-1 == selectedFieldy || y+1 == selectedFieldy) ) ) {
+                                                            console.log("moving from: ",fieldIdToMove);
+                                                            console.log("moving to: ",fieldId);
+                                                            const moveTo = async () => {
+                                                                console.log("client.actions:", client.actions);
+                                                                await client.actions.moveTo(account!, fieldIdToMove, fieldId);
+                                                            };
+                                                            if (myTurn){
+                                                                moveTo();
+                                                            }
+                                                    }
+
+                                                }
+                                            }
+                                        }
+                                        setFieldIdToMove(-1);                                           
+
                                         
 
                                         //info texts
@@ -324,24 +447,29 @@ function App() {
                                             setSelectedFieldHp(structureHp);
                                             if (myAddress == ownedBy){
                                                 setSelectedFieldOwner(true);
+                                                setAbilityShopId(1);
                                             } else {
                                                 setSelectedFieldOwner(false);
                                             }                                           
                                         }
                                         
-                                        if (unitType == 1 || structureType == 2){
+                                        if (unitType == 1 || unitType == 2 ){
                                             if (ownedBy == myAddress){
-                                                setInfoText("Your spawning pool, can be used to summon units");
+                                                setInfoText("Your frog, can be used to move and attack");
+                                                setSelectedFieldCanMove(true);
+                                                setFieldIdToMove(fieldId);                                           
                                             } else {
-                                                setInfoText("Enemy spawning pool, can be used to summon units");
+                                                setInfoText("Enemy frog");
+                                                setSelectedFieldCanMove(false);                                           
                                             }
-                                            setInfoTextTitle("Structure");
+                                            setInfoTextTitle("Unit");
+                                            setSelectedFieldHp(structureHp);
                                             if (myAddress == ownedBy){
                                                 setSelectedFieldOwner(true);
+                                                setFieldIdToMove(fieldId);                                           
                                             } else {
                                                 setSelectedFieldOwner(false);
                                             }
-                                            setSelectedFieldCanMove(true);                                           
                                         }
 
                                     }}
@@ -371,7 +499,7 @@ function App() {
                     <div
                         style={{
                             width: "300px",
-                            height: "300px",
+                            height: "400px",
                             backgroundColor: selectedFieldOwner ? "#8FBC8F" : "#8B0000", // Softer green or darkish red
                             border: `5px solid ${selectedFieldOwner ? "#006400" : "#8B0000"}`, // Border matches the background color
                             display: "flex",
@@ -430,7 +558,9 @@ function App() {
                                 fontSize: "14px",
                             }}
                         >
-                        {selectedFieldHp > 0 ? `HP ${selectedFieldHp}` : ""}
+                        {selectedFieldHp > 0 
+                        ? `HP: ${selectedFieldHp}${selectedMovesLeft >= 0 ? ` Moves: ${selectedMovesLeft}` : ""}` 
+                        : ""}
                         </div>
                         {/* Buttons */}
                         <div
@@ -442,7 +572,7 @@ function App() {
                                 padding: "10px",
                             }}
                         >
-                            {["Box 1", "Box 2", "Box 3", "Box 4"].map((boxName, index) => (
+                            {abilityShopArray.map((boxName, index) => (
                                 <div
                                     key={index}
                                     style={{
@@ -450,7 +580,7 @@ function App() {
                                         justifyContent: "center",
                                         alignItems: "center",
                                         width: "80px", // Fixed width for buttons
-                                        height: "40px", // Fixed height for buttons
+                                        height: "30px", // Fixed height for buttons
                                         backgroundColor: "#006400", // Dark green background
                                         color: "white", // White text
                                         borderRadius: "5px", // Rounded corners
@@ -460,6 +590,14 @@ function App() {
                                         userSelect: "none", // Prevent text selection
                                     }}
                                     onClick={(e) => {
+                                        if (boxName == "Frog (100g)"){
+                                            console.log("buy frog");
+                                            const buyFrog = async () => {
+                                                console.log("client.actions:", client.actions);
+                                                await client.actions.buyFrog(account!);
+                                            };
+                                            buyFrog();
+                                        }
                                         const target = e.currentTarget; // Save reference to the target
                                         target.style.backgroundColor = "#32CD32"; // Light green flash
                                         setTimeout(() => {
@@ -491,6 +629,27 @@ function App() {
                             }}
                         >
                             {myTurn ? "Your Turn" : "Enemy's Turn"}
+                        </div>
+                        {/* Gold Indicator */}
+                        <div
+                            style={{
+                                flex: 1,
+                                width: "100%",
+                                height: "50%",
+                                backgroundColor: myTurn ? "#8FBC8F" : "#8B0000", // Softer green if true, dark red if false
+                                border: "2px solid #006400",
+                                padding: "10px",
+                                boxSizing: "border-box",
+                                overflowY: "auto",
+                                color: myTurn ? "#006400" : "#FFFFFF", // Text color: Dark green for true, white for false
+                                fontSize: "14px",
+                                textAlign: "center", // Center the text horizontally
+                                display: "flex", // Center the text vertically
+                                alignItems: "center", // Center the text vertically
+                                justifyContent: "center", // Center the text horizontally
+                            }}
+                        >
+                            {`Gold: ${myGold? myGold : 0}`}
                         </div>
                     </div>
 

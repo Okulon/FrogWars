@@ -26,9 +26,12 @@ pub struct Field {
     // 0 = none
     // 1 = Mainbase
     pub structureHp: u32,
+    
 
     pub unitType: u32,
     pub occupiedBy: ContractAddress,
+    pub movesLeft: u32
+    
 }
 
 
@@ -42,6 +45,9 @@ pub struct Field {
      pub playerAddress2: ContractAddress,
      pub initialized: bool,
      pub playerCount: u32,
+     pub turnOrder: u32,
+     pub p1Gold: u32,
+     pub p2Gold: u32,
  }
  
 // Game Fields

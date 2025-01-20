@@ -1252,8 +1252,8 @@
   },
   "contracts": [
     {
-      "address": "0x686010eb7f50d0e0584c235e1295cdc2c249a034ce61eb91b069a2cab3c1c61",
-      "class_hash": "0x60a529317565b89e0c7b8c7df516a92a635223db6341ccf39892474704c672d",
+      "address": "0x38b1e7ee6c459dc18f1120dcbb6cd2dce0492b67c3292c704e29bae7f4d61a5",
+      "class_hash": "0x6240c9913d60b706546f251dfadaf92489c161a77aef1b9605aa95d1bd2df5c",
       "abi": [
         {
           "type": "impl",
@@ -1360,6 +1360,36 @@
             {
               "type": "function",
               "name": "resetBattle",
+              "inputs": [],
+              "outputs": [],
+              "state_mutability": "external"
+            },
+            {
+              "type": "function",
+              "name": "nextTurn",
+              "inputs": [],
+              "outputs": [],
+              "state_mutability": "external"
+            },
+            {
+              "type": "function",
+              "name": "moveTo",
+              "inputs": [
+                {
+                  "name": "from",
+                  "type": "core::integer::u32"
+                },
+                {
+                  "name": "to",
+                  "type": "core::integer::u32"
+                }
+              ],
+              "outputs": [],
+              "state_mutability": "external"
+            },
+            {
+              "type": "function",
+              "name": "buyFrog",
               "inputs": [],
               "outputs": [],
               "state_mutability": "external"
@@ -1508,6 +1538,9 @@
         "generateBattle",
         "populateWorld",
         "resetBattle",
+        "nextTurn",
+        "moveTo",
+        "buyFrog",
         "spawn",
         "move",
         "upgrade"
@@ -1517,7 +1550,7 @@
   "models": [
     {
       "members": [],
-      "class_hash": "0x413db1d384fd6bbb8b06ef8e2caaae7c81000a693accab3672fc518695df3d",
+      "class_hash": "0x7ff671b4fb7f0b73cd43ca176dc42f0597bdad44446629798d507479b268745",
       "tag": "dojo_starter-Battle",
       "selector": "0x6d5343564c7ac26fc7aa825293cc959896eeff33a3c3c4705e7f45b915aa137"
     },
@@ -1529,7 +1562,7 @@
     },
     {
       "members": [],
-      "class_hash": "0x71e445a5fed8d672d5a4cb66b0baedbf238fee81a5ec80ce8fa20b87b4aadc7",
+      "class_hash": "0x46ccd7ace65a2c4a1773f3615a0c793d50323d9ed88781ef2c07184766b1aad",
       "tag": "dojo_starter-Field",
       "selector": "0x372469be4fc28ab02715d044aa7274cb17b9a92c922681c8ca811407fe86f1b"
     },

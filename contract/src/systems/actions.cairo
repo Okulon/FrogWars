@@ -7,6 +7,9 @@ trait IActions<T> {
     fn generateBattle(ref self: T);
     fn populateWorld(ref self: T);
     fn resetBattle(ref self: T);
+    fn nextTurn(ref self: T);
+    fn moveTo(ref self: T, from: u32, to: u32);
+    fn buyFrog(ref self: T);
 
     
     fn spawn(ref self: T);
@@ -33,6 +36,132 @@ pub mod actions {
 
     #[abi(embed_v0)]
     impl ActionsImpl of IActions<ContractState> {
+        fn buyFrog (ref self: ContractState) {
+            let mut world = self.world_default();
+
+            let battleId = 1000000;
+
+            let mut spawnValid: bool = false;
+            let mut battle: Battle = world.read_model(battleId);
+            let mut spawnZoneId: u32 = 28;
+            let player = get_caller_address();
+            if (player == battle.playerAddress1){
+                spawnZoneId = 71;
+                if (battle.turnOrder == 0){
+                    if (battle.p1Gold >= 100){
+                        spawnValid = true;
+                        battle.p1Gold -= 100;
+                    }
+                }
+            }
+            if (player == battle.playerAddress2){
+                spawnZoneId = 28;
+                if (battle.turnOrder == 1){
+                    if (battle.p2Gold >= 100){
+                        spawnValid = true;
+                        battle.p2Gold -= 100;
+                    }
+                }
+            }
+            let mut spawnField: Field = world.read_model((spawnZoneId, battleId));
+            if (spawnField.structureHp > 0){
+                spawnValid = false;
+            }
+            if (spawnValid){
+                spawnField.unitType = 1;
+                spawnField.structureHp = 2;
+                spawnField.movesLeft = 1;
+                world.write_model(@spawnField);
+                world.write_model(@battle);
+            }
+
+            
+        }
+        fn moveTo (ref self: ContractState, from: u32, to: u32) {
+            // Get the address of the current caller, possibly the player's address.
+
+            let mut world = self.world_default();
+            let player = get_caller_address();
+            let battleId = 1000000;
+
+            let mut _battle: Battle = world.read_model(battleId);
+            
+            let mut fieldFrom: Field = world.read_model((from, battleId));
+            let mut fieldTo: Field = world.read_model((to, battleId));
+
+            let mut movesLeft = fieldFrom.movesLeft;
+
+            
+            if (movesLeft > 0 && fieldTo.structureHp <= 0 && fieldTo.fieldType == 0){
+                fieldTo.structureHp = fieldFrom.structureHp;
+                fieldTo.movesLeft = fieldFrom.movesLeft -1;
+                fieldTo.unitType = fieldFrom.unitType;
+                fieldTo.occupiedBy = fieldFrom.occupiedBy;
+                
+                fieldFrom.structureHp = 0;
+                fieldFrom.movesLeft -= 1;
+                fieldFrom.unitType = 0;
+
+                world.write_model(@fieldTo);
+                world.write_model(@fieldFrom);
+            }
+
+            if (movesLeft > 0 && fieldTo.structureHp > 0 && fieldTo.occupiedBy != player){
+                fieldTo.structureHp -= 1;
+                if (fieldTo.structureHp <= 0){
+                    fieldTo.structureHp = fieldFrom.structureHp;
+                    fieldTo.movesLeft = fieldFrom.movesLeft -1;
+                    fieldTo.unitType = fieldFrom.unitType;
+                    fieldTo.occupiedBy = fieldFrom.occupiedBy;
+                    
+                    fieldFrom.structureHp = 0;
+                    fieldFrom.movesLeft -= 1;
+                    fieldFrom.unitType = 0;
+
+                    world.write_model(@fieldTo);
+                    world.write_model(@fieldFrom);
+                }
+            }
+
+
+            //TODO: moving needs to check that the field is valid on the smartcontract side, currently only checks client side
+         
+
+
+        }
+        fn nextTurn(ref self: ContractState){
+
+            let mut world = self.world_default();
+
+            let mut battle: Battle = world.read_model(1000000);
+            let player = get_caller_address();
+
+            if (battle.turnOrder == 0){
+                if (player == battle.playerAddress1){
+                    battle.turnOrder = 1;
+                    battle.p2Gold += 50;
+                }
+            }
+            if (battle.turnOrder == 1){
+                if (player == battle.playerAddress2){
+                    battle.turnOrder = 0;
+                    battle.p1Gold += 50;
+                }
+            }
+            world.write_model(@battle);
+
+            //reset moves
+            let mut index: u32 = 0;
+            while index < 100_u32 {
+                let mut field: Field = world.read_model( (index, 1000000) );
+                if (field.unitType == 1){
+                    field.movesLeft = 1;
+                }
+                world.write_model(@field);
+                index += 1;
+            };
+        }
+
         fn joinBattle(ref self: ContractState){
             let mut world = self.world_default();
             let mut battle: Battle = world.read_model(1000000);
@@ -47,14 +176,14 @@ pub mod actions {
                     // two players joined, initialize spawnlocations, give hp to bases
                     let spawnLocations: Array<u32> = array![
                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                        0, 0, 0, 0, 0, 0, 0, 0, 2, 0,
+                        0, 0, 0, 0, 0, 0, 0, 4, 2, 0,
+                        0, 0, 0, 0, 0, 0, 0, 4, 4, 0,
                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                        0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                        0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                        0, 1, 0, 0, 0, 0, 0, 0, 0, 0,
+                        0, 3, 3, 0, 0, 0, 0, 0, 0, 0,
+                        0, 1, 3, 0, 0, 0, 0, 0, 0, 0,
                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 
                     let mut index = 0;
@@ -71,18 +200,23 @@ pub mod actions {
                             if (spawn == 2){
                                 field.occupiedBy = battle.playerAddress2;
                             }
-
-
-                            // let mut _newField: Field = Field{
-                            //     fieldId: index, 
-                            //     battleId: field.battleId, 
-                            //     fieldType: field.fieldType,
-                            //     unitType: field.unitType, 
-                            //     structureType: 1,
-                            //     structureHp: 10,
-                            //     occupiedBy: player }; 
                             world.write_model(@field);
-                        }                                  
+                        }
+
+                        if (spawn == 3 || spawn == 4){
+                            let mut field: Field = world.read_model((index, battleId));
+                            field.unitType = 1;
+                            field.structureHp = 2;
+                            if (spawn == 3){
+                                field.occupiedBy = battle.playerAddress1;
+                                field.movesLeft = 1;
+                            }
+                            if (spawn == 4){
+                                field.occupiedBy = battle.playerAddress2;
+                                field.movesLeft = 1;
+                            }
+                            world.write_model(@field);
+                        }                                       
                         
                         index += 1;
                     };
@@ -108,6 +242,9 @@ pub mod actions {
                  playerAddress2: starknet::contract_address_const::<0x0>(),
                  initialized: false,
                  playerCount: 0,
+                 turnOrder: 0,
+                 p1Gold: 100,
+                 p2Gold: 100,
             };
 
             world.write_model(@newBattle);
@@ -143,7 +280,8 @@ pub mod actions {
                     unitType: 0, 
                     structureType: 0,
                     structureHp: 0,
-                    occupiedBy: starknet::contract_address_const::<0x0>() }; 
+                    occupiedBy: starknet::contract_address_const::<0x0>(),
+                    movesLeft: 0 }; 
                 world.write_model(@newField);
                 index += 1;
              }; 

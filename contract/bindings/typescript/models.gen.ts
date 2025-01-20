@@ -11,6 +11,9 @@ export interface Battle {
 	playerAddress2: string;
 	initialized: boolean;
 	playerCount: BigNumberish;
+	turnOrder: BigNumberish;
+	p1Gold: BigNumberish;
+	p2Gold: BigNumberish;
 }
 
 // Type definition for `dojo_starter::models::BattleValue` struct
@@ -19,6 +22,9 @@ export interface BattleValue {
 	playerAddress2: string;
 	initialized: boolean;
 	playerCount: BigNumberish;
+	turnOrder: BigNumberish;
+	p1Gold: BigNumberish;
+	p2Gold: BigNumberish;
 }
 
 // Type definition for `dojo_starter::models::DirectionsAvailable` struct
@@ -124,19 +130,25 @@ export interface SchemaType extends ISchemaType {
 export const schema: SchemaType = {
 	dojo_starter: {
 		Battle: {
-			fieldOrder: ['battleId', 'playerAddress1', 'playerAddress2', 'initialized', 'playerCount'],
+			fieldOrder: ['battleId', 'playerAddress1', 'playerAddress2', 'initialized', 'playerCount', 'turnOrder', 'p1Gold', 'p2Gold'],
 			battleId: 0,
 			playerAddress1: "",
 			playerAddress2: "",
 			initialized: false,
 			playerCount: 0,
+			turnOrder: 0,
+			p1Gold: 0,
+			p2Gold: 0,
 		},
 		BattleValue: {
-			fieldOrder: ['playerAddress1', 'playerAddress2', 'initialized', 'playerCount'],
+			fieldOrder: ['playerAddress1', 'playerAddress2', 'initialized', 'playerCount', 'turnOrder', 'p1Gold', 'p2Gold'],
 			playerAddress1: "",
 			playerAddress2: "",
 			initialized: false,
 			playerCount: 0,
+			turnOrder: 0,
+			p1Gold: 0,
+			p2Gold: 0,
 		},
 		DirectionsAvailable: {
 			fieldOrder: ['player', 'directions'],

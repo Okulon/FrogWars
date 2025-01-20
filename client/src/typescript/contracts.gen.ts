@@ -67,6 +67,27 @@ export function setupWorld(provider: DojoProvider) {
 		}
 	};
 
+	const build_actions_moveTo_calldata = (from: BigNumberish, to: BigNumberish): DojoCall => {
+		return {
+			contractName: "actions",
+			entrypoint: "moveTo",
+			calldata: [from, to],
+		};
+	};
+
+	const actions_moveTo = async (snAccount: Account | AccountInterface, from: BigNumberish, to: BigNumberish) => {
+		try {
+			return await provider.execute(
+				snAccount,
+				build_actions_moveTo_calldata(from, to),
+				"dojo_starter",
+			);
+		} catch (error) {
+			console.error(error);
+			throw error;
+		}
+	};
+
 	const build_actions_populateWorld_calldata = (): DojoCall => {
 		return {
 			contractName: "actions",
@@ -130,7 +151,47 @@ export function setupWorld(provider: DojoProvider) {
 		}
 	};
 
+	const build_actions_buyFrog_calldata = (): DojoCall => {
+		return {
+			contractName: "actions",
+			entrypoint: "buyFrog",
+			calldata: [],
+		};
+	};
 
+	const actions_buyFrog = async (snAccount: Account | AccountInterface) => {
+		try {
+			return await provider.execute(
+				snAccount,
+				build_actions_buyFrog_calldata(),
+				"dojo_starter",
+			);
+		} catch (error) {
+			console.error(error);
+			throw error;
+		}
+	};
+
+	const build_actions_nextTurn_calldata = (): DojoCall => {
+		return {
+			contractName: "actions",
+			entrypoint: "nextTurn",
+			calldata: [],
+		};
+	};
+
+	const actions_nextTurn = async (snAccount: Account | AccountInterface) => {
+		try {
+			return await provider.execute(
+				snAccount,
+				build_actions_nextTurn_calldata(),
+				"dojo_starter",
+			);
+		} catch (error) {
+			console.error(error);
+			throw error;
+		}
+	};
 
 	return {
 		actions: {
@@ -146,6 +207,12 @@ export function setupWorld(provider: DojoProvider) {
 			buildResetBattleCalldata: build_actions_resetBattle_calldata,
 			spawn: actions_spawn,
 			buildSpawnCalldata: build_actions_spawn_calldata,
+			buyFrog: actions_buyFrog,
+			buildBuyFrogCalldata: build_actions_buyFrog_calldata,
+			nextTurn: actions_nextTurn,
+			buildNextTurnCalldata: build_actions_nextTurn_calldata,
+			moveTo: actions_moveTo,
+			buildMoveToCalldata: build_actions_moveTo_calldata
 		},
 	};
 }
